@@ -1,13 +1,39 @@
 import { GoogleGenAI } from "@google/genai";
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import Article from "../models/Article.js";
+import { parseByArticleID } from "./parseArticle.js";
 
-async function summarizer({ content }) {
+export default async function summarizer(req, res) {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   try {
+    const id = req.params.id;
+    const article = await Article.findById(id);
+    if (!article) {
+      res.status(500).json({
+        message: "Something wrong with the database, failed at summarizer.",
+      });
+      return;
+    }
+    const summary = await article.summary;
+    if (summary.length > 0) {
+      res.status(200).json(article);
+    }
+    let content;
+    if (!article.content.length) {
+      const response = await parseByArticleID(id);
+      if (response.status === 200) {
+        content = await response.json.content;
+      } else {
+        res.status(response.status).json(response.json);
+        return;
+      }
+    } else {
+      content = await article.content;
+    }
     const contents = [
       {
         parts: [
           {
-            text: `Summarize the following in 3 bullet points:\n${content}`,
+            text: `Summarize the following in bullet points:\n${content}`,
           },
         ],
       },
@@ -17,18 +43,21 @@ async function summarizer({ content }) {
       contents: contents,
     });
     const result = await response.text;
-  } catch {
+
+    const summarizedArticle = await Article.findByIdAndUpdate(
+      id,
+      { summary: result },
+      { returnDocument: "after" },
+    );
+    res.status(200).json(summarizedArticle);
+  } catch (error) {
     if (error && error.error && error.error.message) {
       console.error("Gemini API Error:", error.error.message);
-      alert(`❌ Gemini API Error: ${error.error.message}`);
     } else if (error instanceof Error) {
       console.error("Unexpected error:", error.message);
-      alert(`❌ Unexpected Error: ${error.message}`);
     } else {
       console.error("Unknown error object:", error);
-      alert("❌ An unknown error occurred.");
     }
+    res.status(500).json({ message: "Summarization failed." });
   }
 }
-
-export default summarizer;
