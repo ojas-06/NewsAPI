@@ -6,6 +6,7 @@ import { home } from "./routes/home.js";
 
 import { auth } from "./routes/auth.js";
 import { view } from "./routes/view.js";
+import test from "./routes/root.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,8 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 app.use(express.json());
+
+app.use("/", test);
 
 app.use("/home", home);
 
