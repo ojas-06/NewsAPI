@@ -1,5 +1,5 @@
 import express from 'express';
-import { parseArticle } from '../controllers/parseArticle';
+import { parseArticle } from '../controllers/parseArticle.js';
 
 export const view = express.Router();
 

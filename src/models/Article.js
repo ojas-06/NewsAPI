@@ -8,15 +8,14 @@ const articleSchema = mongoose.Schema(
     },
     title: {
       type: String,
-      required: true,
+      // required: true,
     },
     short: {
       type: String,
-      required: true,
+      // required: true,
     },
     content: {
       type: String,
-      required: true,
     },
     author: {
       type: String,
@@ -27,11 +26,11 @@ const articleSchema = mongoose.Schema(
     },
     sourceUrl: {
       type: String,
-      required: true,
+      // required: true,
     },
     category: {
       type: String,
-      required: true,
+      // required: true,
     },
   },
   {

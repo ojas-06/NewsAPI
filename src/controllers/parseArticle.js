@@ -1,10 +1,14 @@
 import axios from "axios";
-import Article from "../models/Article";
+import Article from "../models/Article.js";
 
 export async function parseArticle(req, res) {
   try {
     const articleID = req.params.id;
     const article = await Article.findById(articleID);
+    if (article.content.length > 0) {
+      console.log("reused");
+      res.status(200).json(article);
+    }
     const url = await article.sourceUrl;
     if (!url) {
       console.error("Missing article URL, failed at parseArticle.");
@@ -22,11 +26,10 @@ export async function parseArticle(req, res) {
       url: url,
     });
 
-    const article = new Readability(dom.window.document).parse();
-
+    const articleObject = new Readability(dom.window.document).parse();
     const dbResponse = await Article.findByIdAndUpdate(
       articleID,
-      { content: article.textContent },
+      { content: articleObject.textContent },
       { new: true },
     );
 

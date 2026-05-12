@@ -1,7 +1,7 @@
 import express from "express";
-import getHeadlines from "../controllers/getHeadlines";
+import getHomePageData from "../controllers/getHomePageData.js";
 
 export const home = express.Router();
 
-home.get("/",getHeadlines);
-
+home.get("/", getHomePageData);
+home.get("/:categoryName", getHomePageData);

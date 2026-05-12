@@ -14,11 +14,13 @@ connectDB();
 
 app.use(express.json());
 
-app.use("/homepage", home);
+app.use("/home", home);
 
-app.use("/user",auth)
+app.use("/view", view);
 
-app.use("/view",view)
+// app.use("/user", auth);
+
+
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}...`);
