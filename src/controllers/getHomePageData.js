@@ -13,7 +13,7 @@ export default async function getHomePageData(req, res) {
       categoryNews: categoryNews,
     });
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error at getHomePageData" });
   }
 }
 

@@ -1,11 +1,11 @@
+import "dotenv/config";
+
 import { connectDB } from "./config/db.js";
 import express from "express";
 import { home } from "./routes/home.js";
-import dotenv from "dotenv";
+
 import { auth } from "./routes/auth.js";
 import { view } from "./routes/view.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,8 +20,10 @@ app.use("/view", view);
 
 // app.use("/user", auth);
 
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}...`);
+  });
+}
 
-
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}...`);
-});
+export default app;

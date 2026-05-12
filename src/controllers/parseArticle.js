@@ -3,8 +3,21 @@ import Article from "../models/Article.js";
 
 // Service: takes article ID, parses article content using JSDOM and updates database with article.content
 // returns dummy response fields of status and json containing the complete article object
+
+async function fetchDBbyID(articleID) {
+  try {
+    const article = await Article.findById(articleID);
+    return article;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 export async function parseByArticleID(articleID) {
-  const article = await Article.findById(articleID);
+  const article = await fetchDBbyID(articleID);
+  if (article === undefined) {
+    return undefined;
+  }
   if (article.content.length > 0) {
     return {
       status: 200,
@@ -19,26 +32,31 @@ export async function parseByArticleID(articleID) {
       json: { message: "Article details could not be fetched." },
     };
   }
-  const { JSDOM } = await import("jsdom");
-  const { Readability } = await import("@mozilla/readability");
+  try {
+    const { JSDOM } = await import("jsdom");
+    const { Readability } = await import("@mozilla/readability");
 
-  const articleResponse = await axios.get(url, { timeout: 8000 });
+    const articleResponse = await axios.get(url, { timeout: 8000 });
 
-  const dom = new JSDOM(articleResponse.data, {
-    url: url,
-  });
+    const dom = new JSDOM(articleResponse.data, {
+      url: url,
+    });
 
-  const articleObject = new Readability(dom.window.document).parse();
-  const dbResponse = await Article.findByIdAndUpdate(
-    articleID,
-    { content: articleObject.textContent },
-    { returnDocument: "after" },
-  );
+    const articleObject = new Readability(dom.window.document).parse();
+    const dbResponse = await Article.findByIdAndUpdate(
+      articleID,
+      { content: articleObject.textContent },
+      { returnDocument: "after" },
+    );
 
-  return {
-    status: 200,
-    json: dbResponse,
-  };
+    return {
+      status: 200,
+      json: dbResponse,
+    };
+  } catch (error) {
+    console.error("JSDOM Failed to parse this page.");
+    return { status: 500, json: { error: "Failed to parse article content." } };
+  }
 }
 
 // Express controller wrapper around parse by ID service.
@@ -46,6 +64,11 @@ export async function parseArticle(req, res) {
   try {
     const articleID = req.params.id;
     const parsed = await parseByArticleID(articleID);
+
+    if (parsed === undefined) {
+      res.status(404).json({ message: "Invalid Article ID" });
+      return;
+    }
 
     res.status(parsed.status).json(parsed.json);
   } catch (err) {
