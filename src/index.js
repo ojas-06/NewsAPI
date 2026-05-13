@@ -1,14 +1,14 @@
 import "dotenv/config";
-
-import { connectDB } from "./config/db.js";
 import express from "express";
+import cors from "cors";
+import { connectDB } from "./config/db.js";
 import { home } from "./routes/home.js";
-
 import { auth } from "./routes/auth.js";
 import { view } from "./routes/view.js";
 import test from "./routes/root.js";
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 connectDB();

@@ -41,7 +41,7 @@ async function getHeadlines() {
       const data = await response.json();
       const formattedData = data.articles.map((article) => {
         return {
-          imageUrl: article.urlTomage,
+          imageUrl: article.urlToImage,
           title: article.title,
           short: article.description,
           content: "",

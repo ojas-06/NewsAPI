@@ -16,6 +16,7 @@ export default async function summarizer(req, res) {
     const summary = await article.summary;
     if (summary.length > 0) {
       res.status(200).json(article);
+      return;
     }
     let content;
     if (!article.content.length) {
@@ -33,7 +34,7 @@ export default async function summarizer(req, res) {
       {
         parts: [
           {
-            text: `Summarize the following in bullet points:\n${content}`,
+            text: `Summarize the following in three bullet points:\n${content}`,
           },
         ],
       },
