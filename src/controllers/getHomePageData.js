@@ -21,39 +21,57 @@ async function getHeadlines() {
   const API_KEY = process.env.NEWS_API_KEY;
   const CATEGORY_NAME = "top-headlines";
   try {
-    const cachedHeadlines = await Article.find({ category: CATEGORY_NAME });
-    if (cachedHeadlines.length > 0) {
-      return cachedHeadlines;
-    } else {
-      const response = await fetch(
-        "https://newsapi.org/v2/top-headlines?country=us",
-        {
-          headers: {
-            "X-API-KEY": API_KEY,
-          },
-        },
-      );
+    const latestArticle = await Article.findOne({
+      category: CATEGORY_NAME,
+    }).sort({ updatedAt: -1 });
 
-      if (!response.ok) {
-        console.error("Cannot fetch from NewsAPI..", process.env.NEWS_API_KEY);
-        return { error: "response not received from NewsAPI" };
+    if (latestArticle) {
+      const currentDate = new Date();
+      const lastUpdated = latestArticle.createdAt;
+
+      if (currentDate - lastUpdated <= 24 * 60 * 60 * 1000) {
+        return await Article.find({ category: CATEGORY_NAME }).sort({
+          updatedAt: -1,
+        });
+      } else {
+        console.log("Updating article database");
+        await Article.deleteMany({ category: CATEGORY_NAME });
       }
-      const data = await response.json();
-      const formattedData = data.articles.map((article) => {
-        return {
-          imageUrl: article.urlToImage,
-          title: article.title,
-          short: article.description,
-          content: "",
-          author: article.author,
-          summary: "",
-          sourceUrl: article.url,
-          category: CATEGORY_NAME,
-        };
-      });
-      await Article.insertMany(formattedData);
-      return formattedData;
     }
+
+    const response = await fetch(
+      "https://newsapi.org/v2/top-headlines?country=us",
+      {
+        headers: {
+          "X-API-KEY": API_KEY,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Cannot fetch from NewsAPI..");
+      return { error: "response not received from NewsAPI" };
+    }
+    const data = await response.json();
+    const formattedData = data.articles.map((article) => {
+      return {
+        imageUrl: article.urlToImage,
+        title: article.title,
+        short: article.description,
+        content: "",
+        author: article.author,
+        summary: "",
+        sourceUrl: article.url,
+        category: CATEGORY_NAME,
+      };
+    });
+    await Article.insertMany(formattedData);
+    const updatedHeadlines = await Article.find({
+      category: CATEGORY_NAME,
+    }).sort({
+      updatedAt: -1,
+    });
+    return updatedHeadlines;
   } catch (err) {
     console.error("Failed in getHeadlines controller, ", err);
     return {};
@@ -78,41 +96,56 @@ async function getArticleByCategory(category) {
     console.log("Queried category not found, default: business");
   } else CATEGORY_NAME = category.toLowerCase();
   try {
-    const cachedNews = await Article.find({ category: CATEGORY_NAME });
-    if (cachedNews.length > 0) {
-      return cachedNews;
-    } else {
-      const response = await fetch(
-        `https://newsapi.org/v2/everything?q=${CATEGORY_NAME}`,
-        {
-          headers: {
-            "X-API-KEY": API_KEY,
-          },
-        },
-      );
+    const latestArticle = await Article.findOne({
+      category: CATEGORY_NAME,
+    }).sort({ updatedAt: -1 });
 
-      if (!response.ok) {
-        console.error("Cannot fetch from NewsAPI..", API_KEY);
-        return { error: "response not received from NewsAPI" };
+    if (latestArticle) {
+      const currentDate = new Date();
+      const lastUpdated = latestArticle.createdAt;
+      if (currentDate - lastUpdated <= 24 * 60 * 60 * 1000) {
+        return await Article.find({ category: CATEGORY_NAME }).sort({
+          updatedAt: -1,
+        });
+      } else {
+        console.log("Updating article database");
+        await Article.deleteMany({ category: CATEGORY_NAME });
       }
-      const data = await response.json();
-
-      const formattedData = data.articles.map((article) => {
-        return {
-          imageUrl: article.urlToImage,
-          title: article.title,
-          short: article.description,
-          content: "",
-          author: article.author,
-          summary: "",
-          sourceUrl: article.url,
-          category: CATEGORY_NAME,
-        };
-      });
-
-      await Article.insertMany(formattedData);
-      return formattedData;
     }
+    const response = await fetch(
+      `https://newsapi.org/v2/everything?q=${CATEGORY_NAME}`,
+      {
+        headers: {
+          "X-API-KEY": API_KEY,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Cannot fetch from NewsAPI..");
+      return { error: "response not received from NewsAPI" };
+    }
+    const data = await response.json();
+
+    const formattedData = data.articles.map((article) => {
+      return {
+        imageUrl: article.urlToImage,
+        title: article.title,
+        short: article.description,
+        content: "",
+        author: article.author,
+        summary: "",
+        sourceUrl: article.url,
+        category: CATEGORY_NAME,
+      };
+    });
+
+    await Article.insertMany(formattedData);
+
+    const updatedNews = await Article.find({ category: CATEGORY_NAME }).sort({
+      updatedAt: -1,
+    });
+    return updatedNews;
   } catch (err) {
     return { error: err };
   }
